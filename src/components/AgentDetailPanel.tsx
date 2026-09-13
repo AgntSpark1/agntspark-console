@@ -1,4 +1,4 @@
-import { X } from 'lucide-react';
+import { ExternalLink, X } from 'lucide-react';
 import clsx from 'clsx';
 import StatusBadge from './StatusBadge';
 import { useAgent, useAgentLogs, useAgentMetrics } from '../hooks/useAgents';
@@ -36,6 +36,17 @@ export default function AgentDetailPanel({ agentId, onClose }: AgentDetailPanelP
           <div className="min-w-0">
             <h2 className="truncate text-base font-semibold text-white">{agent?.name ?? 'Loading…'}</h2>
             <p className="truncate font-mono text-xs text-slate-500">{agentId}</p>
+            {agent?.url && (
+              <a
+                href={agent.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-1 flex items-center gap-1 truncate text-xs text-brand-300 hover:text-brand-200"
+              >
+                {agent.url.replace(/^https?:\/\//, '')}
+                <ExternalLink className="h-3 w-3 shrink-0" />
+              </a>
+            )}
           </div>
           <div className="flex items-center gap-3">
             {agent && <StatusBadge status={agent.status} />}
