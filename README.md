@@ -79,7 +79,7 @@ The dev server proxies `/v1/*` to the gateway at `http://localhost:8080`. If tha
 VITE_DEV_PROXY_TARGET=http://localhost:8899 npm run dev
 ```
 
-For a deployed build, set `VITE_API_URL` to the gateway's full `/v1` base URL (e.g. `https://api.agntspark.io/v1`).
+For a deployed build, set `VITE_API_URL` to the gateway's full `/v1` base URL (e.g. `https://api.agntspark.com/v1`).
 
 ## Build
 
