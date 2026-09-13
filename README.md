@@ -1,123 +1,96 @@
 # AgntSpark Console
 
-The web-based management dashboard for the [AgntSpark](https://github.com/AgntSpark1) AI Agent platform.
+The web dashboard for the [AgntSpark](https://github.com/AgntSpark1) AI agent hosting platform.
 
-## Screenshots
-
-<!-- TODO: add screenshots -->
-
-![Dashboard](https://placeholder.agntspark.dev/console-dashboard.png)
-![Agents](https://placeholder.agntspark.dev/console-agents.png)
-![Analytics](https://placeholder.agntspark.dev/console-analytics.png)
+It talks to [`agntspark-gateway`](https://github.com/AgntSpark1/agntspark-gateway) over its real `/v1` API — every screen reflects what the gateway actually supports today, nothing is mocked.
 
 ## Features
 
-- **Dashboard Overview** — Real-time metrics, active agent count, request throughput, and error rates at a glance.
-- **Agent Management** — Create, configure, deploy, pause, and delete AI agents from a unified interface.
-- **Deployment Wizard** — Step-by-step guided deployment with environment selection, resource allocation, and rollout strategy.
-- **Analytics & Metrics** — Time-series charts for token usage, latency percentiles, cost breakdown, and per-agent performance.
-- **Settings** — API key management, webhook configuration, team access control, and billing preferences.
-- **Responsive Design** — Works on desktop, tablet, and mobile with a dark-first theme optimized for extended sessions.
+- **Sign in / create account** — email + password against `POST /v1/auth/login` and `/v1/auth/register`; the session JWT is kept in `localStorage` and dropped automatically on a 401.
+- **Dashboard** — total / running / failed agent counts and total replicas, computed from `GET /v1/agents`.
+- **Agents** — search and filter by status, create-and-deploy an agent from a container image (replicas, CPU, memory), scale up/down, delete.
+- **Agent detail** — live CPU / memory from Docker stats (`GET /v1/agents/{id}/metrics`) and a tail of container logs (`GET /v1/agents/{id}/logs`, refreshed every 5s).
+- **Settings → API Keys** — generate (raw key shown once), list, and revoke keys for the `agntspark` CLI and Python SDK.
+- **Settings → Account** — the signed-in user from `GET /v1/auth/me`.
+
+### Deliberately not in the console
+
+These don't exist in the gateway yet, so there's no UI pretending otherwise: multi-environment deploys, rollout strategies, pause/resume, request-level metrics / latency percentiles, token usage, cost estimates, webhooks, team management, and a public URL per agent. See the gateway README's "Known follow-ups".
 
 ## Tech Stack
 
-| Layer            | Technology                                    |
-| ---------------- | --------------------------------------------- |
-| Framework        | React 18 + TypeScript                         |
-| Build Tool       | Vite 5                                        |
-| Styling          | TailwindCSS 3                                 |
-| Data Fetching    | TanStack React Query 5                        |
-| State Management | Zustand 4                                     |
-| Routing          | React Router 6                                |
-| Charts           | Recharts 2                                    |
-| Icons            | lucide-react                                  |
-| HTTP Client      | Axios                                         |
+| Layer            | Technology                   |
+| ---------------- | ---------------------------- |
+| Framework        | React 18 + TypeScript        |
+| Build Tool       | Vite 5                       |
+| Styling          | TailwindCSS 3                |
+| Data Fetching    | TanStack React Query 5       |
+| State Management | Zustand 4                    |
+| Routing          | React Router 6               |
+| Icons            | lucide-react                 |
+| HTTP Client      | Axios                        |
 
 ## Project Structure
 
 ```
-agntspark-console/
-├── .github/
-│   └── workflows/
-│       └── ci.yml              # Build + type-check pipeline
-├── src/
-│   ├── api/
-│   │   ├── client.ts           # Axios-based API client
-│   │   └── types.ts            # API response/request types
-│   ├── components/
-│   │   ├── Layout.tsx          # App shell: sidebar + topbar
-│   │   ├── Sidebar.tsx         # Navigation sidebar
-│   │   ├── AgentCard.tsx       # Agent summary card
-│   │   ├── MetricsChart.tsx    # Recharts wrapper
-│   │   ├── DeployModal.tsx     # Deployment dialog
-│   │   └── StatusBadge.tsx     # Agent status pill
-│   ├── hooks/
-│   │   ├── useAgents.ts        # Agent data hooks (React Query)
-│   │   └── useMetrics.ts       # Metrics data hooks
-│   ├── pages/
-│   │   ├── Dashboard.tsx       # Overview page
-│   │   ├── Agents.tsx          # Agent list & management
-│   │   ├── Deploy.tsx          # Deployment wizard
-│   │   ├── Analytics.tsx       # Deep metrics
-│   │   └── Settings.tsx       # Platform settings
-│   ├── store/
-│   │   └── agentStore.ts       # Zustand store for UI state
-│   ├── types/
-│   │   └── index.ts            # Shared TypeScript types
-│   ├── App.tsx                 # Root component + routes
-│   ├── main.tsx                # Vite entry point
-│   └── index.css               # Tailwind + custom styles
-├── index.html
-├── vite.config.ts
-├── tsconfig.json
-├── tailwind.config.js
-├── postcss.config.js
-├── package.json
-└── LICENSE
+src/
+├── api/
+│   ├── client.ts             # Axios client: Bearer token, 401 → /login, error normalization
+│   └── types.ts              # Request payload types
+├── components/
+│   ├── Layout.tsx            # App shell
+│   ├── Sidebar.tsx           # Nav + signed-in user + sign out
+│   ├── AgentCard.tsx         # Agent summary with scale / logs / delete
+│   ├── AgentDetailPanel.tsx  # Live metrics + log tail
+│   ├── CreateAgentModal.tsx  # Create-and-deploy form
+│   └── StatusBadge.tsx       # Agent status pill
+├── hooks/
+│   ├── useAuth.ts            # login / register / me / logout
+│   ├── useAgents.ts          # list / get / create / scale / delete / logs / metrics
+│   └── useApiKeys.ts         # list / create / revoke
+├── pages/
+│   ├── Login.tsx
+│   ├── Dashboard.tsx
+│   ├── Agents.tsx
+│   └── Settings.tsx
+├── store/agentStore.ts       # UI state (filters, selected agent, modal)
+├── types/index.ts            # Mirrors the gateway's response shapes
+├── App.tsx                   # Routes + auth guard
+└── main.tsx
 ```
 
-## Development Setup
+## Development
 
 ### Prerequisites
 
-- Node.js 18+ (use [fnm](https://github.com/Schniz/fnm) or [nvm](https://github.com/nvm-sh/nvm))
-- The AgntSpark API server running locally on port 8000 (or update the proxy in `vite.config.ts`)
+- Node.js 18+
+- `agntspark-gateway` running locally (default `http://localhost:8080`) with Postgres and a Docker daemon — see its README.
 
-### Install & Run
+### Run
 
 ```bash
-# clone
-git clone https://github.com/AgntSpark1/agntspark-console.git
-cd agntspark-console
-
-# install dependencies
 npm install
-
-# start dev server (http://localhost:5173)
-npm run dev
+npm run dev          # http://localhost:5173
 ```
 
-The dev server proxies `/api` requests to `http://localhost:8000` by default.
+The dev server proxies `/v1/*` to the gateway at `http://localhost:8080`. If that port is taken on your machine, point it elsewhere:
+
+```bash
+VITE_DEV_PROXY_TARGET=http://localhost:8899 npm run dev
+```
+
+For a deployed build, set `VITE_API_URL` to the gateway's full `/v1` base URL (e.g. `https://api.agntspark.io/v1`).
 
 ## Build
 
 ```bash
-# type-check + production build
-npm run build
-
-# preview the production build locally
+npm run build        # tsc -b + vite build → dist/
 npm run preview
 ```
 
-Output is written to `dist/`.
-
 ## CI
 
-GitHub Actions workflow (`.github/workflows/ci.yml`) runs on every push and PR:
-
-1. `npm ci`
-2. `npm run type-check`
-3. `npm run build`
+`.github/workflows/ci.yml` runs `npm ci`, `npm run type-check`, and `npm run build` on every push and PR.
 
 ## License
 

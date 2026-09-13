@@ -1,58 +1,39 @@
-// ── API request/response types ──────────────────────────────────────────
+// ── API request types ────────────────────────────────────────────────────
+//
+// Matches agntspark-gateway's real query params (agntspark_gateway/routers/
+// agents.py) — no generic PaginatedResponse<T> wrapper, since the gateway's
+// list response is agent-specific ({agents, total, page, page_size,
+// has_next}, not {data, total, page, perPage}).
+
+import type { AgentStatus } from '../types';
 
 export interface AgentListParams {
   page?: number;
-  perPage?: number;
-  status?: 'active' | 'paused' | 'deploying' | 'error' | 'idle';
-  sort?: 'name' | 'created' | 'requests';
-  order?: 'asc' | 'desc';
+  page_size?: number;
+  status?: AgentStatus;
+  tag?: string;
+}
+
+export interface DeployAgentPayload {
+  image: string;
+  replicas: number;
+  resources?: {
+    cpu?: number;
+    memory_mb?: number;
+  };
 }
 
 export interface CreateAgentPayload {
   name: string;
-  description: string;
-  model: string;
-  systemPrompt: string;
-  temperature: number;
-  maxTokens: number;
-  tools: string[];
+  model?: string;
+  framework?: string;
+  system_prompt?: string;
+  tags?: string[];
+  deploy?: DeployAgentPayload;
 }
 
-export interface DeployAgentPayload {
-  agentId: string;
-  environment: 'staging' | 'production';
-  replicas: number;
-  cpu: number;
-  memory: number;
-  strategy: 'rolling' | 'blue-green' | 'recreate';
-}
-
-export interface MetricsQueryParams {
-  agentId?: string;
-  start: string; // ISO 8601
-  end: string; // ISO 8601
-  granularity?: '1m' | '5m' | '1h' | '1d';
-}
-
-// ── API response wrappers ────────────────────────────────────────────────
-
-export interface PaginatedResponse<T> {
-  data: T[];
-  total: number;
-  page: number;
-  perPage: number;
-}
-
-export interface MetricsResponse {
-  series: {
-    timestamp: string;
-    value: number;
-  }[];
-  summary: {
-    avg: number;
-    min: number;
-    max: number;
-    p95: number;
-    p99: number;
-  };
+export interface ScaleAgentPayload {
+  direction: 'up' | 'down';
+  count?: number;
+  reason?: string;
 }

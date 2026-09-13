@@ -1,66 +1,105 @@
 // ── Shared domain types ──────────────────────────────────────────────────
+//
+// These mirror agntspark-gateway's real /v1 response shapes (see
+// agntspark_gateway/schemas/agents.py and schemas/auth.py) — not an
+// imagined product surface. Fields the gateway doesn't have (multi-
+// environment, deployment strategies, cost/token tracking, webhooks,
+// pause/resume) are deliberately absent; see agntspark-gateway's README
+// "Known follow-ups" for what's genuinely not built yet.
 
 export type AgentStatus =
-  | 'active'
-  | 'paused'
-  | 'deploying'
-  | 'error'
-  | 'idle';
+  | 'pending'
+  | 'building'
+  | 'starting'
+  | 'running'
+  | 'scaling'
+  | 'stopping'
+  | 'stopped'
+  | 'failed'
+  | 'crashed';
 
-export type Environment = 'staging' | 'production';
+export interface ResourceLimits {
+  cpu: number;
+  memory_mb: number;
+  gpu: number;
+  gpu_type?: string | null;
+  disk_gb: number;
+  ephemeral_storage_gb: number;
+}
 
-export type DeployStrategy = 'rolling' | 'blue-green' | 'recreate';
+export interface EnvVar {
+  key: string;
+  value: string;
+  secret: boolean;
+}
+
+export interface DeployConfig {
+  replicas: number;
+  resources: ResourceLimits;
+  env: EnvVar[];
+  image?: string | null;
+  build_path?: string | null;
+  command?: string | null;
+  args: string[];
+  health_check_path?: string | null;
+  auto_scale: boolean;
+  min_replicas: number;
+  max_replicas: number;
+  port: number;
+}
 
 export interface Agent {
   id: string;
   name: string;
-  description: string;
+  runtime: string;
+  framework: string;
   model: string;
   status: AgentStatus;
-  systemPrompt: string;
-  temperature: number;
-  maxTokens: number;
-  tools: string[];
-  version: string;
-  environment: Environment;
+  created_at: string;
+  updated_at: string;
+  url?: string | null;
+  deploy?: DeployConfig | null;
+  tags: string[];
+  metadata: Record<string, string>;
+  error?: string | null;
+  version: number;
   replicas: number;
-  requestsPerMin: number;
-  totalRequests: number;
-  errorRate: number;
-  avgLatencyMs: number;
-  createdAt: string;
-  updatedAt: string;
 }
 
-export interface AgentSummary {
-  id: string;
-  name: string;
-  status: AgentStatus;
-  model: string;
-  requestsPerMin: number;
-  errorRate: number;
-  environment: Environment;
+export interface AgentListResponse {
+  agents: Agent[];
+  total: number;
+  page: number;
+  page_size: number;
+  has_next: boolean;
 }
 
-export interface MetricPoint {
+export interface AgentMetrics {
+  agent_id: string;
   timestamp: string;
-  value: number;
+  cpu_percent: number;
+  memory_mb: number;
+  memory_percent: number;
+  gpu_percent: number;
+  gpu_memory_mb: number;
+  request_count: number;
+  request_rate: number;
+  error_count: number;
+  error_rate: number;
+  p50_latency_ms: number;
+  p95_latency_ms: number;
+  p99_latency_ms: number;
+  replicas: number;
 }
 
-export interface MetricSeries {
-  label: string;
-  data: MetricPoint[];
-  color?: string;
-}
-
-export interface DashboardSummary {
-  totalAgents: number;
-  activeAgents: number;
-  totalRequests: number;
-  errorRate: number;
-  avgLatencyMs: number;
-  totalTokens: number;
-  estimatedCost: number;
+export interface AgentLog {
+  agent_id: string;
+  replica_id: string;
+  timestamp: string;
+  level: string;
+  message: string;
+  source: string;
+  metadata: Record<string, unknown>;
 }
 
 export interface User {
@@ -68,26 +107,7 @@ export interface User {
   name: string;
   email: string;
   role: 'admin' | 'developer' | 'viewer';
-  avatarUrl?: string;
-}
-
-export interface CreateAgentInput {
-  name: string;
-  description: string;
-  model: string;
-  systemPrompt: string;
-  temperature: number;
-  maxTokens: number;
-  tools: string[];
-}
-
-export interface DeployAgentInput {
-  agentId: string;
-  environment: Environment;
-  replicas: number;
-  cpu: number;
-  memory: number;
-  strategy: DeployStrategy;
+  avatarUrl?: string | null;
 }
 
 export interface ApiKey {
@@ -95,20 +115,11 @@ export interface ApiKey {
   label: string;
   keyPreview: string;
   createdAt: string;
-  lastUsedAt?: string;
+  lastUsedAt?: string | null;
   scopes: string[];
 }
 
-export interface Webhook {
-  id: string;
-  url: string;
-  events: string[];
-  active: boolean;
-  createdAt: string;
-}
-
-export interface TimeRange {
-  start: Date;
-  end: Date;
-  granularity: '1m' | '5m' | '1h' | '1d';
+/** Only returned once, at creation — the raw secret is never shown again. */
+export interface ApiKeyCreated extends ApiKey {
+  key: string;
 }

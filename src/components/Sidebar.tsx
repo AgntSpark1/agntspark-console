@@ -1,28 +1,31 @@
-import { NavLink, useLocation } from 'react-router-dom';
-import {
-  LayoutDashboard,
-  Bot,
-  Rocket,
-  BarChart3,
-  Settings,
-  Sparkles,
-} from 'lucide-react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { Bot, LayoutDashboard, LogOut, Settings, Sparkles } from 'lucide-react';
 import clsx from 'clsx';
+import { useLogout, useMe } from '../hooks/useAuth';
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/agents', label: 'Agents', icon: Bot },
-  { to: '/deploy', label: 'Deploy', icon: Rocket },
-  { to: '/analytics', label: 'Analytics', icon: BarChart3 },
   { to: '/settings', label: 'Settings', icon: Settings },
 ];
 
 export default function Sidebar() {
-  const location = useLocation();
+  const meQ = useMe();
+  const logout = useLogout();
+  const navigate = useNavigate();
+  const me = meQ.data;
+
+  const initials = me?.name
+    ? me.name
+        .split(/\s+/)
+        .map((p) => p[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase()
+    : '··';
 
   return (
     <aside className="flex h-full w-60 flex-col border-r border-surface-3 bg-surface-1">
-      {/* Logo */}
       <div className="flex items-center gap-2.5 px-5 py-5">
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-brand-500 to-brand-700">
           <Sparkles className="h-5 w-5 text-white" />
@@ -33,7 +36,6 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* Nav */}
       <nav className="flex-1 space-y-1 px-3 py-2">
         {navItems.map(({ to, label, icon: Icon, end }) => (
           <NavLink
@@ -55,22 +57,27 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* Footer */}
-      <div className="border-t border-surface-3 px-5 py-4">
+      <div className="border-t border-surface-3 px-4 py-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-3 text-xs font-semibold text-slate-300">
-            AS
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-3 text-xs font-semibold text-slate-300">
+            {initials}
           </div>
-          <div className="flex flex-col">
-            <span className="text-xs font-medium text-slate-300">admin</span>
-            <span className="text-[11px] text-slate-500">admin@agntspark.io</span>
+          <div className="flex min-w-0 flex-1 flex-col">
+            <span className="truncate text-xs font-medium text-slate-300">{me?.name ?? '…'}</span>
+            <span className="truncate text-[11px] text-slate-500">{me?.email ?? ''}</span>
           </div>
+          <button
+            onClick={() => {
+              logout();
+              navigate('/login', { replace: true });
+            }}
+            aria-label="Sign out"
+            title="Sign out"
+            className="rounded-lg p-1.5 text-slate-500 transition-colors hover:bg-surface-2 hover:text-slate-300"
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
         </div>
-      </div>
-
-      {/* Active route debug */}
-      <div className="hidden text-[10px] text-slate-600">
-        {location.pathname}
       </div>
     </aside>
   );
