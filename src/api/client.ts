@@ -1,6 +1,9 @@
 import axios, { AxiosError, AxiosInstance } from 'axios';
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? '/api/v1';
+// agntspark-gateway serves bare /v1 (no /api prefix) — matches
+// agntspark-sdk's default base_url. The dev-only proxy below forwards
+// this same /v1 prefix straight to the local gateway.
+const BASE_URL = import.meta.env.VITE_API_URL ?? '/v1';
 
 const apiClient: AxiosInstance = axios.create({
   baseURL: BASE_URL,
