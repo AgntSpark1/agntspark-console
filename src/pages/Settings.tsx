@@ -1,16 +1,19 @@
 import { useState } from 'react';
-import { Check, Copy, Key, Loader2, Mail, Plus, Trash2, User as UserIcon, Users } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { Check, Copy, CreditCard, Key, Loader2, Mail, Plus, Trash2, User as UserIcon, Users } from 'lucide-react';
 import clsx from 'clsx';
-import { useAdminUsers, useUpdateUser } from '../hooks/useAccount';
+import { useAdminUsers, useUpdateUser, useUsage } from '../hooks/useAccount';
+import { useBillingStatus, useOpenBillingPortal, useStartCheckout } from '../hooks/useBilling';
 import { useApiKeys, useCreateApiKey, useRevokeApiKey } from '../hooks/useApiKeys';
 import { useMe } from '../hooks/useAuth';
 import { useCreateInvite, useInvites, useRevokeInvite, type Invite } from '../hooks/useInvites';
 import type { User } from '../types';
 
-type Tab = 'api-keys' | 'invites' | 'users' | 'account';
+type Tab = 'api-keys' | 'billing' | 'invites' | 'users' | 'account';
 
 const allTabs: { id: Tab; label: string; icon: typeof Key; adminOnly?: boolean }[] = [
   { id: 'api-keys', label: 'API Keys', icon: Key },
+  { id: 'billing', label: 'Plan & Billing', icon: CreditCard },
   { id: 'invites', label: 'Invites', icon: Mail, adminOnly: true },
   { id: 'users', label: 'Users', icon: Users, adminOnly: true },
   { id: 'account', label: 'Account', icon: UserIcon },
@@ -20,7 +23,9 @@ const PLAN_OPTIONS = ['free', 'pro'];
 const ROLE_OPTIONS: User['role'][] = ['viewer', 'developer', 'admin'];
 
 export default function Settings() {
-  const [tab, setTab] = useState<Tab>('api-keys');
+  const [params] = useSearchParams();
+  // Stripe sends people back to /settings?billing=…
+  const [tab, setTab] = useState<Tab>(params.get('billing') ? 'billing' : 'api-keys');
   const isAdmin = useMe().data?.role === 'admin';
   const tabs = allTabs.filter((t) => !t.adminOnly || isAdmin);
 
@@ -48,6 +53,7 @@ export default function Settings() {
 
       <div className="flex-1">
         {tab === 'api-keys' && <ApiKeysTab />}
+        {tab === 'billing' && <BillingTab returnState={params.get('billing')} />}
         {tab === 'invites' && isAdmin && <InvitesTab />}
         {tab === 'users' && isAdmin && <UsersTab />}
         {tab === 'account' && <AccountTab />}
@@ -332,6 +338,98 @@ function InvitesTab() {
           ))
         )}
       </div>
+    </div>
+  );
+}
+
+function BillingTab({ returnState }: { returnState: string | null }) {
+  const statusQ = useBillingStatus();
+  const usageQ = useUsage();
+  const checkout = useStartCheckout();
+  const portal = useOpenBillingPortal();
+  const status = statusQ.data;
+  const limits = usageQ.data?.limits;
+  const isPaid = status?.plan === 'pro';
+  const actionError = (checkout.error ?? portal.error) as Error | null;
+
+  return (
+    <div className="max-w-2xl rounded-xl border border-surface-3 bg-surface-1 p-6">
+      <h2 className="text-base font-semibold text-white">Plan &amp; Billing</h2>
+
+      {returnState === 'success' && (
+        <p className="mt-4 rounded-lg bg-emerald-500/10 px-3 py-2 text-xs text-emerald-400">
+          Thanks for subscribing — your plan updates as soon as Stripe confirms the payment (usually a few
+          seconds).
+        </p>
+      )}
+      {returnState === 'cancelled' && (
+        <p className="mt-4 rounded-lg bg-surface-2 px-3 py-2 text-xs text-slate-400">Checkout was cancelled.</p>
+      )}
+
+      {statusQ.isLoading ? (
+        <p className="mt-4 text-sm text-slate-500">Loading…</p>
+      ) : statusQ.isError || !status ? (
+        <p className="mt-4 text-sm text-rose-400">Couldn't load billing status.</p>
+      ) : (
+        <>
+          <div className="mt-4 flex items-center gap-3">
+            <span className="text-2xl font-bold capitalize text-white">{status.plan}</span>
+            {status.subscription_status && (
+              <span
+                className={clsx(
+                  'rounded px-1.5 py-0.5 text-[10px] font-medium',
+                  status.subscription_status === 'past_due'
+                    ? 'bg-amber-500/10 text-amber-400'
+                    : 'bg-slate-500/10 text-slate-400',
+                )}
+              >
+                {status.subscription_status.replace('_', ' ')}
+              </span>
+            )}
+          </div>
+          {status.subscription_status === 'past_due' && (
+            <p className="mt-2 text-xs text-amber-400">
+              Your last payment failed. Update your card in the billing portal to keep Pro limits.
+            </p>
+          )}
+          {limits && (
+            <p className="mt-2 text-sm text-slate-400">
+              Up to {limits.max_agents} agents, {limits.max_replicas} running replicas, {limits.max_vcpu} vCPU and{' '}
+              {limits.max_memory_mb / 1024} GB memory in total.
+            </p>
+          )}
+
+          {!status.enabled ? (
+            <p className="mt-5 text-sm text-slate-500">
+              Paid plans aren't open yet. During the beta an admin can change your plan.
+            </p>
+          ) : (
+            <div className="mt-5 flex flex-wrap gap-3">
+              {!isPaid && (
+                <button
+                  onClick={() => checkout.mutate()}
+                  disabled={checkout.isPending}
+                  className="flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-50"
+                >
+                  {checkout.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Upgrade to Pro
+                </button>
+              )}
+              {status.has_billing_account && (
+                <button
+                  onClick={() => portal.mutate()}
+                  disabled={portal.isPending}
+                  className="flex items-center gap-2 rounded-lg border border-surface-3 bg-surface-2 px-4 py-2 text-sm font-medium text-slate-300 hover:bg-surface-3 disabled:opacity-50"
+                >
+                  {portal.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Manage billing
+                </button>
+              )}
+            </div>
+          )}
+          {actionError && <p className="mt-3 text-xs text-rose-400">{actionError.message}</p>}
+        </>
+      )}
     </div>
   );
 }
