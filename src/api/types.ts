@@ -15,7 +15,8 @@ export interface AgentListParams {
 }
 
 export interface DeployAgentPayload {
-  image: string;
+  /** Omit to run the platform's default runtime image (agntspark/agent-runtime). */
+  image?: string;
   replicas: number;
   resources?: {
     cpu?: number;
@@ -28,6 +29,8 @@ export interface CreateAgentPayload {
   model?: string;
   framework?: string;
   system_prompt?: string;
+  /** Bring-your-own key for the model's provider; stored encrypted by the gateway. */
+  api_key?: string;
   tags?: string[];
   deploy?: DeployAgentPayload;
 }
