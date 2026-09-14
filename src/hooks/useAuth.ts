@@ -48,10 +48,25 @@ export function useLogin() {
   });
 }
 
+export type RegistrationMode = 'open' | 'invite' | 'closed';
+
+/** Whether sign-up is open, needs an invite code, or is closed. */
+export function useRegistrationMode() {
+  return useQuery({
+    queryKey: ['auth', 'registration'],
+    queryFn: async () => {
+      const { data } = await apiClient.get<{ mode: RegistrationMode }>('/auth/registration');
+      return data.mode;
+    },
+    staleTime: 5 * 60_000,
+    retry: false,
+  });
+}
+
 export function useRegister() {
   const storeSession = useStoreSession();
   return useMutation({
-    mutationFn: async (input: { email: string; password: string; name: string }) => {
+    mutationFn: async (input: { email: string; password: string; name: string; invite_code?: string }) => {
       const { data } = await apiClient.post<TokenResponse>('/auth/register', input);
       return data;
     },
