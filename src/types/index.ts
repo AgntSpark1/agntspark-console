@@ -107,6 +107,8 @@ export interface User {
   name: string;
   email: string;
   role: 'admin' | 'developer' | 'viewer';
+  /** Plan key from agntspark-gateway's plans.py, e.g. "free" or "pro". */
+  plan?: string;
   avatarUrl?: string | null;
 }
 

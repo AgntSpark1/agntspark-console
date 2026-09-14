@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { AlertTriangle, Bot, Layers, Zap } from 'lucide-react';
 import { useAgents } from '../hooks/useAgents';
+import { useUsage, type AccountUsage } from '../hooks/useAccount';
 import { useAgentStore } from '../store/agentStore';
 import AgentCard from '../components/AgentCard';
 import AgentDetailPanel from '../components/AgentDetailPanel';
@@ -35,6 +36,51 @@ function StatCard({
   );
 }
 
+function UsageBar({ label, used, limit, unit = '' }: { label: string; used: number; limit: number; unit?: string }) {
+  const pct = limit > 0 ? Math.min(100, (used / limit) * 100) : 0;
+  return (
+    <div>
+      <div className="flex justify-between text-xs">
+        <span className="text-slate-400">{label}</span>
+        <span className="text-slate-300">
+          {used}
+          {unit} / {limit}
+          {unit}
+        </span>
+      </div>
+      <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-surface-3">
+        <div
+          className={pct >= 90 ? 'h-full bg-rose-500' : pct >= 70 ? 'h-full bg-amber-500' : 'h-full bg-brand-500'}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function PlanUsage({ data }: { data: AccountUsage }) {
+  const { limits, usage } = data;
+  return (
+    <div className="rounded-xl border border-surface-3 bg-surface-1 p-5">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-white">
+          Plan: <span className="capitalize text-brand-300">{data.plan}</span>
+        </h2>
+        {data.exempt && <span className="text-[11px] text-slate-500">Admin — limits not enforced</span>}
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <UsageBar label="Agents" used={usage.agents} limit={limits.max_agents} />
+        <UsageBar label="Running replicas" used={usage.replicas} limit={limits.max_replicas} />
+        <UsageBar label="vCPU" used={usage.vcpu} limit={limits.max_vcpu} />
+        <UsageBar label="Memory" used={usage.memory_mb} limit={limits.max_memory_mb} unit=" MB" />
+      </div>
+      <p className="mt-3 text-[11px] text-slate-500">
+        Up to {limits.max_replica_cpu} vCPU and {limits.max_replica_memory_mb} MB per replica.
+      </p>
+    </div>
+  );
+}
+
 /**
  * Summary computed from GET /v1/agents — the gateway has no separate
  * dashboard/aggregate-metrics endpoint, so every number here is derived
@@ -42,6 +88,7 @@ function StatCard({
  */
 export default function Dashboard() {
   const agentsQuery = useAgents({ page_size: 100 });
+  const usageQuery = useUsage();
   const { selectedAgentId, selectAgent } = useAgentStore();
 
   const data = agentsQuery.data;
@@ -69,6 +116,8 @@ export default function Dashboard() {
           note={partialNote}
         />
       </div>
+
+      {usageQuery.data && <PlanUsage data={usageQuery.data} />}
 
       {agentsQuery.isError && (
         <p className="rounded-lg bg-rose-500/10 px-4 py-3 text-sm text-rose-400">

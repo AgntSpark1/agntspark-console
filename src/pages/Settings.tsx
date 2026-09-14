@@ -1,17 +1,23 @@
 import { useState } from 'react';
-import { Check, Copy, Key, Loader2, Mail, Plus, Trash2, User as UserIcon } from 'lucide-react';
+import { Check, Copy, Key, Loader2, Mail, Plus, Trash2, User as UserIcon, Users } from 'lucide-react';
 import clsx from 'clsx';
+import { useAdminUsers, useUpdateUser } from '../hooks/useAccount';
 import { useApiKeys, useCreateApiKey, useRevokeApiKey } from '../hooks/useApiKeys';
 import { useMe } from '../hooks/useAuth';
 import { useCreateInvite, useInvites, useRevokeInvite, type Invite } from '../hooks/useInvites';
+import type { User } from '../types';
 
-type Tab = 'api-keys' | 'invites' | 'account';
+type Tab = 'api-keys' | 'invites' | 'users' | 'account';
 
 const allTabs: { id: Tab; label: string; icon: typeof Key; adminOnly?: boolean }[] = [
   { id: 'api-keys', label: 'API Keys', icon: Key },
   { id: 'invites', label: 'Invites', icon: Mail, adminOnly: true },
+  { id: 'users', label: 'Users', icon: Users, adminOnly: true },
   { id: 'account', label: 'Account', icon: UserIcon },
 ];
+
+const PLAN_OPTIONS = ['free', 'pro'];
+const ROLE_OPTIONS: User['role'][] = ['viewer', 'developer', 'admin'];
 
 export default function Settings() {
   const [tab, setTab] = useState<Tab>('api-keys');
@@ -43,6 +49,7 @@ export default function Settings() {
       <div className="flex-1">
         {tab === 'api-keys' && <ApiKeysTab />}
         {tab === 'invites' && isAdmin && <InvitesTab />}
+        {tab === 'users' && isAdmin && <UsersTab />}
         {tab === 'account' && <AccountTab />}
       </div>
     </div>
@@ -329,6 +336,100 @@ function InvitesTab() {
   );
 }
 
+function UsersTab() {
+  const meQ = useMe();
+  const usersQ = useAdminUsers(true);
+  const update = useUpdateUser();
+
+  const selectClass =
+    'h-8 rounded-lg border border-surface-3 bg-surface-2 px-2 text-xs text-slate-200 focus:border-brand-500 focus:outline-none disabled:opacity-50';
+
+  return (
+    <div className="rounded-xl border border-surface-3 bg-surface-1 p-6">
+      <h2 className="text-base font-semibold text-white">Users</h2>
+      <p className="mt-1 text-sm text-slate-500">
+        Roles: viewers can only look, developers can deploy, admins manage invites and users. The plan sets
+        each account's resource limits.
+      </p>
+      {update.isError && <p className="mt-3 text-xs text-rose-400">{(update.error as Error).message}</p>}
+
+      <div className="mt-5 space-y-3">
+        {usersQ.isLoading ? (
+          <p className="text-sm text-slate-500">Loading users…</p>
+        ) : usersQ.isError ? (
+          <p className="text-sm text-rose-400">{(usersQ.error as Error).message}</p>
+        ) : (
+          usersQ.data!.map((u) => {
+            const isMe = u.id === meQ.data?.id;
+            return (
+              <div
+                key={u.id}
+                className={clsx(
+                  'flex flex-wrap items-center justify-between gap-3 rounded-lg border border-surface-3 bg-surface-2 p-4',
+                  !u.is_active && 'opacity-60',
+                )}
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-slate-200">
+                    {u.name} {isMe && <span className="text-[11px] text-slate-500">(you)</span>}
+                  </p>
+                  <p className="truncate text-xs text-slate-400">{u.email}</p>
+                  <p className="text-[11px] text-slate-500">
+                    {u.agents} agent{u.agents === 1 ? '' : 's'} · joined {new Date(u.created_at).toLocaleDateString()}
+                    {!u.is_active && ' · deactivated'}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <select
+                    aria-label={`Role for ${u.email}`}
+                    value={u.role}
+                    disabled={isMe || update.isPending}
+                    onChange={(e) => update.mutate({ id: u.id, role: e.target.value as User['role'] })}
+                    className={selectClass}
+                  >
+                    {ROLE_OPTIONS.map((r) => (
+                      <option key={r} value={r}>
+                        {r}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    aria-label={`Plan for ${u.email}`}
+                    value={u.plan}
+                    disabled={update.isPending}
+                    onChange={(e) => update.mutate({ id: u.id, plan: e.target.value })}
+                    className={selectClass}
+                  >
+                    {PLAN_OPTIONS.map((p) => (
+                      <option key={p} value={p}>
+                        {p}
+                      </option>
+                    ))}
+                  </select>
+                  {!isMe && (
+                    <button
+                      onClick={() => {
+                        const verb = u.is_active ? 'Deactivate' : 'Reactivate';
+                        if (confirm(`${verb} ${u.email}?`)) {
+                          update.mutate({ id: u.id, is_active: !u.is_active });
+                        }
+                      }}
+                      disabled={update.isPending}
+                      className="h-8 rounded-lg border border-surface-3 px-2.5 text-xs text-slate-300 hover:bg-surface-3 disabled:opacity-50"
+                    >
+                      {u.is_active ? 'Deactivate' : 'Reactivate'}
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
+
 function AccountTab() {
   const meQ = useMe();
   const me = meQ.data;
@@ -343,6 +444,7 @@ function AccountTab() {
           <Row label="Name" value={me.name} />
           <Row label="Email" value={me.email} />
           <Row label="Role" value={me.role} />
+          <Row label="Plan" value={me.plan ?? 'free'} />
           <Row label="User ID" value={me.id} mono />
         </dl>
       ) : (
