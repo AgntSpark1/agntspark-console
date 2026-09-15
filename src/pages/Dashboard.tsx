@@ -75,7 +75,12 @@ function PlanUsage({ data }: { data: AccountUsage }) {
         <UsageBar label="Memory" used={usage.memory_mb} limit={limits.max_memory_mb} unit=" MB" />
       </div>
       <p className="mt-3 text-[11px] text-slate-500">
-        Up to {limits.max_replica_cpu} vCPU and {limits.max_replica_memory_mb} MB per replica.
+        Up to {limits.max_replica_cpu} vCPU and {limits.max_replica_memory_mb} MB per replica, and{' '}
+        {limits.max_agent_rpm.toLocaleString()} requests per minute per agent.
+      </p>
+      <p className="mt-1 text-[11px] text-slate-400">
+        This month: {data.period.requests.toLocaleString()} requests ·{' '}
+        {data.period.vcpu_hours.toFixed(2)} vCPU-hours · {data.period.memory_gb_hours.toFixed(2)} GB-hours
       </p>
     </div>
   );

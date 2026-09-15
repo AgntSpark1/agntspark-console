@@ -64,6 +64,24 @@ export interface Agent {
   error?: string | null;
   version: number;
   replicas: number;
+  /** "private" agents only serve callers presenting one of their access keys. */
+  access: AgentAccess;
+  /** Requests per minute per caller IP; null = platform default. */
+  rate_limit_rpm: number | null;
+}
+
+export type AgentAccess = 'public' | 'private';
+
+export interface AgentAccessKey {
+  id: string;
+  label: string;
+  key_preview: string;
+  created_at: string;
+}
+
+/** Only returned once, at creation. */
+export interface AgentAccessKeyCreated extends AgentAccessKey {
+  key: string;
 }
 
 export interface AgentListResponse {

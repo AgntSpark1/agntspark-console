@@ -15,12 +15,22 @@ export interface AccountUsage {
     max_memory_mb: number;
     max_replica_cpu: number;
     max_replica_memory_mb: number;
+    /** Requests per minute one agent's URL serves, across all callers. */
+    max_agent_rpm: number;
   };
   usage: {
     agents: number;
     replicas: number;
     vcpu: number;
     memory_mb: number;
+  };
+  /** Metered usage since the first of the month (UTC). */
+  period: {
+    start: string;
+    replica_hours: number;
+    vcpu_hours: number;
+    memory_gb_hours: number;
+    requests: number;
   };
 }
 
