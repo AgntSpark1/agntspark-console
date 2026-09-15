@@ -68,6 +68,8 @@ export interface Agent {
   access: AgentAccess;
   /** Requests per minute per caller IP; null = platform default. */
   rate_limit_rpm: number | null;
+  /** Only in the response to creating a private agent: its first access key, shown once. */
+  access_key?: string | null;
 }
 
 export type AgentAccess = 'public' | 'private';

@@ -5,7 +5,7 @@
 // list response is agent-specific ({agents, total, page, page_size,
 // has_next}, not {data, total, page, perPage}).
 
-import type { AgentStatus } from '../types';
+import type { AgentAccess, AgentStatus } from '../types';
 
 export interface AgentListParams {
   page?: number;
@@ -31,6 +31,8 @@ export interface CreateAgentPayload {
   system_prompt?: string;
   /** Bring-your-own key for the model's provider; stored encrypted by the gateway. */
   api_key?: string;
+  /** Defaults to private; a private agent's response carries its first access key. */
+  access?: AgentAccess;
   tags?: string[];
   deploy?: DeployAgentPayload;
 }
