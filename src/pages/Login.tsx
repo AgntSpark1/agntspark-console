@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
-import { Loader2, Sparkles } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import BrandMark from '../components/BrandMark';
 import clsx from 'clsx';
 import { hasStoredToken, useLogin, useRegister, useRegistrationMode } from '../hooks/useAuth';
 
@@ -47,9 +48,7 @@ export default function Login() {
     <div className="flex min-h-screen items-center justify-center bg-surface-0 p-4 text-slate-200">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex items-center justify-center gap-2.5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-brand-500 to-brand-700">
-            <Sparkles className="h-5 w-5 text-white" />
-          </div>
+          <BrandMark className="h-9 w-9 shrink-0 text-slate-100" />
           <span className="text-lg font-semibold text-white">AgntSpark Console</span>
         </div>
 

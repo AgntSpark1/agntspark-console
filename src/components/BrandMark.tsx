@@ -1,0 +1,30 @@
+interface BrandMarkProps {
+  className?: string;
+  /** Adds the rounded dark tile used for the app icon and favicon. */
+  tile?: boolean;
+}
+
+/**
+ * The AgntSpark mark: an A whose crossbar is a spark. The A follows the
+ * current text color; the spark is always brand orange. Same geometry as
+ * agntspark-website/brand/build.py.
+ */
+export default function BrandMark({ className, tile = false }: BrandMarkProps) {
+  return (
+    <svg viewBox="0 0 32 32" className={className} aria-hidden="true" focusable="false">
+      {tile && <rect width="32" height="32" rx="7.5" fill="#141412" />}
+      <path
+        d="M5.5 27.5 L16 5 L26.5 27.5"
+        fill="none"
+        stroke={tile ? '#EEECE6' : 'currentColor'}
+        strokeWidth="4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M16 13.8 Q16.7 19.3 22.2 20 Q16.7 20.7 16 26.2 Q15.3 20.7 9.8 20 Q15.3 19.3 16 13.8Z"
+        fill="#FF5A1F"
+      />
+    </svg>
+  );
+}

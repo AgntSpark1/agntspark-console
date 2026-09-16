@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Bot, LayoutDashboard, LogOut, Settings, Sparkles } from 'lucide-react';
+import { Bot, LayoutDashboard, LogOut, Settings } from 'lucide-react';
+import BrandMark from './BrandMark';
 import clsx from 'clsx';
 import { useLogout, useMe } from '../hooks/useAuth';
 
@@ -27,9 +28,7 @@ export default function Sidebar() {
   return (
     <aside className="flex h-full w-60 flex-col border-r border-surface-3 bg-surface-1">
       <div className="flex items-center gap-2.5 px-5 py-5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-brand-500 to-brand-700">
-          <Sparkles className="h-5 w-5 text-white" />
-        </div>
+        <BrandMark className="h-8 w-8 shrink-0 text-slate-100" />
         <div className="flex flex-col">
           <span className="text-sm font-semibold text-white">AgntSpark</span>
           <span className="text-[11px] text-slate-500">Console</span>
