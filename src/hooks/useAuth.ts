@@ -74,6 +74,35 @@ export function useRegister() {
   });
 }
 
+/** Emails a reset link; resolves the same whether or not the account exists. */
+export function useRequestPasswordReset() {
+  return useMutation({
+    mutationFn: async (input: { email: string }) => {
+      await apiClient.post('/auth/password-reset', input);
+    },
+  });
+}
+
+export function useConfirmPasswordReset() {
+  return useMutation({
+    mutationFn: async (input: { token: string; password: string }) => {
+      await apiClient.post('/auth/password-reset/confirm', input);
+    },
+  });
+}
+
+/** Changes the password; other sessions end, this one gets a fresh token. */
+export function useChangePassword() {
+  const storeSession = useStoreSession();
+  return useMutation({
+    mutationFn: async (input: { current_password: string; new_password: string }) => {
+      const { data } = await apiClient.post<TokenResponse>('/auth/password', input);
+      return data;
+    },
+    onSuccess: storeSession,
+  });
+}
+
 export function useLogout() {
   const qc = useQueryClient();
   return () => {

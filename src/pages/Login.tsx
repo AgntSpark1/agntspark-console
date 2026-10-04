@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import BrandMark from '../components/BrandMark';
 import clsx from 'clsx';
 import { hasStoredToken, useLogin, useRegister, useRegistrationMode } from '../hooks/useAuth';
 
-const inputClass =
+export const inputClass =
   'h-10 w-full rounded-lg border border-surface-3 bg-surface-2 px-3 text-sm text-slate-200 placeholder:text-slate-600 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500';
 
 export default function Login() {
@@ -138,6 +138,14 @@ export default function Login() {
               />
               {activeMode === 'register' && (
                 <p className="mt-1 text-[11px] text-slate-500">At least 8 characters.</p>
+              )}
+              {activeMode === 'login' && (
+                <Link
+                  to="/reset-password"
+                  className="mt-1.5 inline-block text-[11px] text-slate-500 hover:text-brand-300"
+                >
+                  Forgot password?
+                </Link>
               )}
             </div>
 

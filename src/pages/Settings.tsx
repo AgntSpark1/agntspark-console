@@ -5,7 +5,7 @@ import clsx from 'clsx';
 import { useAdminUsers, useUpdateUser, useUsage } from '../hooks/useAccount';
 import { useBillingStatus, useOpenBillingPortal, useStartCheckout } from '../hooks/useBilling';
 import { useApiKeys, useCreateApiKey, useRevokeApiKey } from '../hooks/useApiKeys';
-import { useMe } from '../hooks/useAuth';
+import { useChangePassword, useMe } from '../hooks/useAuth';
 import { useCreateInvite, useInvites, useRevokeInvite, type Invite } from '../hooks/useInvites';
 import type { User } from '../types';
 
@@ -548,7 +548,73 @@ function AccountTab() {
       ) : (
         <p className="mt-4 text-sm text-rose-400">Couldn't load account.</p>
       )}
+      <ChangePassword />
     </div>
+  );
+}
+
+function ChangePassword() {
+  const change = useChangePassword();
+  const [current, setCurrent] = useState('');
+  const [next, setNext] = useState('');
+  const fieldClass =
+    'h-9 w-full rounded-lg border border-surface-3 bg-surface-2 px-3 text-sm text-slate-200 focus:border-brand-500 focus:outline-none';
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        change.mutate(
+          { current_password: current, new_password: next },
+          {
+            onSuccess: () => {
+              setCurrent('');
+              setNext('');
+            },
+          },
+        );
+      }}
+      className="mt-6 space-y-3 border-t border-surface-3 pt-5"
+    >
+      <h3 className="text-sm font-semibold text-white">Change password</h3>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <input
+          aria-label="Current password"
+          type="password"
+          required
+          maxLength={72}
+          autoComplete="current-password"
+          placeholder="Current password"
+          value={current}
+          onChange={(e) => setCurrent(e.target.value)}
+          className={fieldClass}
+        />
+        <input
+          aria-label="New password"
+          type="password"
+          required
+          minLength={8}
+          maxLength={72}
+          autoComplete="new-password"
+          placeholder="New password (8+ characters)"
+          value={next}
+          onChange={(e) => setNext(e.target.value)}
+          className={fieldClass}
+        />
+      </div>
+      {change.isError && <p className="text-xs text-rose-400">{(change.error as Error).message}</p>}
+      {change.isSuccess && (
+        <p className="text-xs text-emerald-400">Password changed. Other devices have been signed out.</p>
+      )}
+      <button
+        type="submit"
+        disabled={change.isPending}
+        className="flex items-center gap-2 rounded-lg bg-brand-500 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-brand-600 disabled:opacity-50"
+      >
+        {change.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+        Update password
+      </button>
+    </form>
   );
 }
 
