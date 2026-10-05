@@ -2,14 +2,17 @@ import { useState } from 'react';
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import BrandMark from '../components/BrandMark';
+import LanguagePicker from '../components/LanguagePicker';
 import clsx from 'clsx';
 import { hasStoredToken, useLogin, useRegister, useRegistrationMode } from '../hooks/useAuth';
+import { useI18n } from '../i18n';
 
 const inputClass =
   'h-10 w-full rounded-lg border border-surface-3 bg-surface-2 px-3 text-sm text-slate-200 placeholder:text-slate-600 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500';
 
 export default function Login() {
   const navigate = useNavigate();
+  const { t } = useI18n();
   const [params] = useSearchParams();
   // Invite links look like /login?invite=inv_…
   const inviteFromLink = params.get('invite') ?? '';
@@ -49,14 +52,18 @@ export default function Login() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-surface-0 p-4 text-slate-200">
+    <div className="studio-bg relative flex min-h-[100dvh] items-center justify-center p-4 text-slate-200">
+      <div className="absolute right-3 top-[calc(0.75rem+env(safe-area-inset-top))]">
+        <LanguagePicker />
+      </div>
       <div className="w-full max-w-sm">
-        <div className="mb-8 flex items-center justify-center gap-2.5">
-          <BrandMark className="h-9 w-9 shrink-0 text-slate-100" />
-          <span className="text-lg font-semibold text-white">AgntSpark Console</span>
+        <div className="mb-8 flex flex-col items-center gap-3 text-center">
+          <BrandMark className="h-11 w-11 shrink-0 text-slate-100" />
+          <span className="text-xl font-semibold tracking-tight text-white">AgntSpark</span>
+          <p className="max-w-xs text-sm text-slate-400">{t('login.tagline')}</p>
         </div>
 
-        <div className="rounded-2xl border border-surface-3 bg-surface-1 p-6">
+        <div className="rounded-2xl border border-white/5 bg-surface-1/90 p-6 shadow-2xl shadow-black/40 backdrop-blur">
           {canRegister && (
             <div className="mb-5 grid grid-cols-2 gap-1 rounded-lg bg-surface-2 p-1">
               {(['login', 'register'] as const).map((m) => (
@@ -69,7 +76,7 @@ export default function Login() {
                     activeMode === m ? 'bg-surface-1 text-white' : 'text-slate-400 hover:text-slate-200',
                   )}
                 >
-                  {m === 'login' ? 'Sign in' : 'Create account'}
+                  {m === 'login' ? t('login.signIn') : t('login.createAccount')}
                 </button>
               ))}
             </div>
@@ -79,7 +86,7 @@ export default function Login() {
             {activeMode === 'register' && registration === 'invite' && (
               <div>
                 <label htmlFor="invite" className="mb-1.5 block text-xs text-slate-500">
-                  Invite code
+                  {t('login.inviteCode')}
                 </label>
                 <input
                   id="invite"
@@ -92,14 +99,14 @@ export default function Login() {
                   className={`${inputClass} font-mono`}
                 />
                 <p className="mt-1 text-[11px] text-slate-500">
-                  AgntSpark is in private alpha — accounts need an invite.
+                  {t('login.inviteNote')}
                 </p>
               </div>
             )}
             {activeMode === 'register' && (
               <div>
                 <label htmlFor="name" className="mb-1.5 block text-xs text-slate-500">
-                  Name
+                  {t('login.name')}
                 </label>
                 <input
                   id="name"
@@ -113,7 +120,7 @@ export default function Login() {
             )}
             <div>
               <label htmlFor="email" className="mb-1.5 block text-xs text-slate-500">
-                Email
+                {t('login.email')}
               </label>
               <input
                 id="email"
@@ -127,7 +134,7 @@ export default function Login() {
             </div>
             <div>
               <label htmlFor="password" className="mb-1.5 block text-xs text-slate-500">
-                Password
+                {t('login.password')}
               </label>
               <input
                 id="password"
@@ -141,7 +148,7 @@ export default function Login() {
                 className={inputClass}
               />
               {activeMode === 'register' && (
-                <p className="mt-1 text-[11px] text-slate-500">At least 8 characters.</p>
+                <p className="mt-1 text-[11px] text-slate-500">{t('login.passwordHint')}</p>
               )}
             </div>
 
@@ -157,12 +164,12 @@ export default function Login() {
               className="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-brand-500 text-sm font-semibold text-white transition-colors hover:bg-brand-600 disabled:opacity-50"
             >
               {active.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-              {activeMode === 'login' ? 'Sign in' : 'Create account'}
+              {activeMode === 'login' ? t('login.signIn') : t('login.createAccount')}
             </button>
           </form>
 
           {!canRegister && (
-            <p className="mt-4 text-center text-[11px] text-slate-500">New accounts are currently closed.</p>
+            <p className="mt-4 text-center text-[11px] text-slate-500">{t('login.closed')}</p>
           )}
         </div>
       </div>

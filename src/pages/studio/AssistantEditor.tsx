@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Inbox, Loader2, MessageCircle, Send, SlidersHorizontal, Trash2, UserRound } from 'lucide-react';
 import clsx from 'clsx';
+import Avatar from '../../components/studio/Avatar';
 import ChatPanel from '../../components/studio/ChatPanel';
 import ConversationsPanel from '../../components/studio/ConversationsPanel';
 import KnowledgePanel from '../../components/studio/KnowledgePanel';
 import SharePanel from '../../components/studio/SharePanel';
+import SectionTitle from '../../components/studio/SectionTitle';
+import StatusPill from '../../components/studio/StatusPill';
+import { isKnownTemplate, templateText } from '../../components/studio/templateText';
 import {
   sendTestMessage,
   useAssistant,
@@ -14,20 +18,22 @@ import {
   useTemplates,
   useUpdateAssistant,
 } from '../../hooks/useStudio';
+import { useI18n, type MessageKey } from '../../i18n';
 import type { Assistant, ChatMessage } from '../../types/studio';
 
 const TABS = [
-  { key: 'setup', label: 'Set up' },
-  { key: 'test', label: 'Try it' },
-  { key: 'share', label: 'Share' },
-  { key: 'chats', label: 'Chats' },
-] as const;
+  { key: 'setup', label: 'tab.setup', icon: SlidersHorizontal },
+  { key: 'test', label: 'tab.test', icon: MessageCircle },
+  { key: 'share', label: 'tab.share', icon: Send },
+  { key: 'chats', label: 'tab.chats', icon: Inbox },
+] as const satisfies readonly { key: string; label: MessageKey; icon: unknown }[];
 type Tab = (typeof TABS)[number]['key'];
 
 export default function AssistantEditor() {
   const { id = '' } = useParams();
+  const { t } = useI18n();
   const [params, setParams] = useSearchParams();
-  const tab = (TABS.find((t) => t.key === params.get('tab'))?.key ?? 'setup') as Tab;
+  const tab = (TABS.find((x) => x.key === params.get('tab'))?.key ?? 'setup') as Tab;
   const assistantQ = useAssistant(id);
   const a = assistantQ.data;
 
@@ -41,9 +47,9 @@ export default function AssistantEditor() {
   if (!a) {
     return (
       <div className="space-y-3 py-12 text-center">
-        <p className="text-slate-300">This assistant doesn't exist anymore.</p>
+        <p className="text-slate-300">{t('editor.missing')}</p>
         <Link to="/studio" className="text-sm text-brand-300 hover:underline">
-          Back to your assistants
+          {t('editor.backToList')}
         </Link>
       </div>
     );
@@ -51,30 +57,43 @@ export default function AssistantEditor() {
 
   return (
     <div className="flex flex-1 flex-col gap-4">
-      <div className="flex items-center gap-2">
-        <Link to="/studio" aria-label="Back" className="rounded-lg p-1.5 text-slate-400 hover:bg-surface-2">
-          <ArrowLeft className="h-4 w-4" />
+      <div className="flex items-center gap-3">
+        <Link
+          to="/studio"
+          aria-label={t('common.back')}
+          className="-ml-1.5 rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-surface-2 hover:text-slate-200"
+        >
+          <ArrowLeft className="h-5 w-5" />
         </Link>
-        <h1 className="truncate text-lg font-semibold text-white">{a.name}</h1>
-        <span className={clsx('ml-auto text-xs', a.is_public ? 'text-emerald-400' : 'text-slate-500')}>
-          {a.is_public ? 'Live' : 'Draft'}
-        </span>
+        <Avatar name={a.name} />
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-lg font-semibold tracking-tight text-white">{a.name}</h1>
+          <StatusPill live={a.is_public} className="mt-0.5" />
+        </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-1 rounded-xl bg-surface-1 p-1">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            onClick={() => setParams({ tab: t.key }, { replace: true })}
-            className={clsx(
-              'rounded-lg py-2 text-sm font-medium transition-colors',
-              tab === t.key ? 'bg-surface-3 text-white' : 'text-slate-400 hover:text-slate-200',
-            )}
-          >
-            {t.label}
-          </button>
-        ))}
+      <div className="sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-10 -mx-4 bg-surface-0/80 px-4 py-2 backdrop-blur-xl">
+        <div role="tablist" className="grid grid-cols-4 gap-1 rounded-xl border border-white/5 bg-surface-1 p-1">
+          {TABS.map((x) => {
+            const Icon = x.icon;
+            return (
+              <button
+                key={x.key}
+                role="tab"
+                aria-selected={tab === x.key}
+                type="button"
+                onClick={() => setParams({ tab: x.key }, { replace: true })}
+                className={clsx(
+                  'flex flex-col items-center gap-0.5 rounded-lg py-1.5 text-xs font-medium transition-colors sm:flex-row sm:justify-center sm:gap-1.5 sm:py-2 sm:text-sm',
+                  tab === x.key ? 'bg-surface-3 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200',
+                )}
+              >
+                <Icon className="h-4 w-4" />
+                {t(x.label)}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {tab === 'setup' && <SetupTab assistant={a} />}
@@ -87,10 +106,16 @@ export default function AssistantEditor() {
 
 function SetupTab({ assistant }: { assistant: Assistant }) {
   const navigate = useNavigate();
+  const { t } = useI18n();
   const update = useUpdateAssistant(assistant.id);
   const remove = useDeleteAssistant();
   const templatesQ = useTemplates();
-  const hint = templatesQ.data?.find((t) => t.key === assistant.template)?.instructions_hint;
+  const hint = templateText(
+    t,
+    assistant.template,
+    'hint',
+    templatesQ.data?.find((x) => x.key === assistant.template)?.instructions_hint,
+  );
 
   const [name, setName] = useState(assistant.name);
   const [instructions, setInstructions] = useState(assistant.instructions);
@@ -112,31 +137,33 @@ function SetupTab({ assistant }: { assistant: Assistant }) {
           e.preventDefault();
           update.mutate({ name: name.trim() || assistant.name, instructions, greeting });
         }}
-        className="card space-y-4 p-4"
+        className="card space-y-4 p-5"
       >
+        <SectionTitle icon={UserRound} title={t('setup.basics')} help={t('setup.basicsHelp')} />
         <div>
-          <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-slate-300">
-            Name
+          <label htmlFor="name" className="label">
+            {t('setup.name')}
           </label>
           <input id="name" maxLength={80} value={name} onChange={(e) => setName(e.target.value)} className="input" />
         </div>
         <div>
-          <label htmlFor="instructions" className="mb-1.5 block text-sm font-medium text-slate-300">
-            What should it know and how should it talk?
+          <label htmlFor="instructions" className="label">
+            {t('setup.instructions')}
           </label>
           <textarea
             id="instructions"
-            rows={5}
+            rows={6}
             maxLength={8000}
             value={instructions}
             onChange={(e) => setInstructions(e.target.value)}
             placeholder={hint}
-            className="input h-auto py-2 leading-relaxed"
+            className="input h-auto py-2.5 leading-relaxed"
           />
+          <p className="mt-1 text-right text-[11px] tabular-nums text-slate-600">{instructions.length} / 8000</p>
         </div>
         <div>
-          <label htmlFor="greeting" className="mb-1.5 block text-sm font-medium text-slate-300">
-            First message people see
+          <label htmlFor="greeting" className="label">
+            {t('setup.greeting')}
           </label>
           <input
             id="greeting"
@@ -147,10 +174,12 @@ function SetupTab({ assistant }: { assistant: Assistant }) {
           />
         </div>
         {update.isError && <p className="text-xs text-rose-400">{(update.error as Error).message}</p>}
-        <button type="submit" disabled={!dirty || update.isPending} className="btn-primary">
-          {update.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-          {dirty ? 'Save changes' : 'Saved'}
-        </button>
+        <div className="flex justify-end">
+          <button type="submit" disabled={!dirty || update.isPending} className="btn-primary">
+            {update.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+            {dirty ? t('setup.save') : t('setup.saved')}
+          </button>
+        </div>
       </form>
 
       <KnowledgePanel assistant={assistant} />
@@ -158,19 +187,20 @@ function SetupTab({ assistant }: { assistant: Assistant }) {
       <button
         type="button"
         onClick={() => {
-          if (window.confirm(`Delete "${assistant.name}" and all its chats? This can't be undone.`)) {
+          if (window.confirm(t('setup.deleteConfirm', { name: assistant.name }))) {
             remove.mutate(assistant.id, { onSuccess: () => navigate('/studio', { replace: true }) });
           }
         }}
-        className="w-full rounded-lg py-2 text-sm text-rose-400 hover:bg-rose-500/10"
+        className="flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm text-rose-400 transition-colors hover:bg-rose-500/10"
       >
-        Delete assistant
+        <Trash2 className="h-4 w-4" /> {t('setup.delete')}
       </button>
     </div>
   );
 }
 
 function TestTab({ assistant }: { assistant: Assistant }) {
+  const { t } = useI18n();
   const usageQ = useStudioUsage();
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -178,17 +208,23 @@ function TestTab({ assistant }: { assistant: Assistant }) {
   const disabledReason = !usage
     ? undefined
     : !usage.chat_available
-      ? "Chat isn't switched on for this server yet."
+      ? t('test.unavailable')
       : usage.messages_used >= usage.messages_limit
-        ? "You've used this month's replies."
+        ? t('test.outOfReplies')
         : undefined;
+  const suggestions = isKnownTemplate(assistant.template)
+    ? (['try1', 'try2', 'try3'] as const).map((f) => templateText(t, assistant.template, f))
+    : [];
 
   return (
-    <div className="flex min-h-[60dvh] flex-1 flex-col">
-      <p className="text-xs text-slate-500">Test chats count toward your monthly replies and show up under Chats.</p>
+    <div className="card flex min-h-[65dvh] flex-1 flex-col p-3">
+      <p className="px-1 pb-1 text-xs text-slate-500">{t('test.note')}</p>
       <ChatPanel
         className="flex-1"
+        assistantName={assistant.name}
         greeting={assistant.greeting}
+        suggestions={suggestions}
+        suggestionsLabel={t('test.tryAsking')}
         messages={messages}
         conversationId={conversationId}
         send={(m, cid) => sendTestMessage(assistant.id, m, cid)}

@@ -56,7 +56,7 @@ export function useAssistant(id: string) {
 export function useCreateAssistant() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { template: string; name: string }) =>
+    mutationFn: async (input: { template: string; name: string; greeting?: string }) =>
       (await apiClient.post<Assistant>('/studio/assistants', input)).data,
     onSuccess: (a) => {
       qc.setQueryData(studioKeys.assistant(a.id), a);
