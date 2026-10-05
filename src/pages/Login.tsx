@@ -13,6 +13,10 @@ export default function Login() {
   const [params] = useSearchParams();
   // Invite links look like /login?invite=inv_…
   const inviteFromLink = params.get('invite') ?? '';
+  // Where to go after signing in: the page that sent us here, else the
+  // builder app (most people come to make an assistant).
+  const nextParam = params.get('next') ?? '';
+  const next = nextParam.startsWith('/') && !nextParam.startsWith('//') ? nextParam : '/studio';
 
   const login = useLogin();
   const register = useRegister();
@@ -25,7 +29,7 @@ export default function Login() {
   const [name, setName] = useState('');
   const [inviteCode, setInviteCode] = useState(inviteFromLink);
 
-  if (hasStoredToken()) return <Navigate to="/" replace />;
+  if (hasStoredToken()) return <Navigate to={next} replace />;
 
   const canRegister = registration !== 'closed';
   const activeMode = canRegister ? mode : 'login';
@@ -33,7 +37,7 @@ export default function Login() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const onSuccess = () => navigate('/', { replace: true });
+    const onSuccess = () => navigate(next, { replace: true });
     if (activeMode === 'login') {
       login.mutate({ email, password }, { onSuccess });
     } else {

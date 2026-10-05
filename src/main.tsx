@@ -27,3 +27,11 @@ createRoot(rootElement).render(
     </QueryClientProvider>
   </StrictMode>,
 );
+
+// Installable app (home screen on phones, an app window on desktop). Dev
+// builds skip it so the cached shell never hides local changes.
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    void navigator.serviceWorker.register('/sw.js');
+  });
+}
