@@ -9,6 +9,7 @@ import AssistantEditor from './pages/studio/AssistantEditor';
 import NewAssistant from './pages/studio/NewAssistant';
 import PublicChat from './pages/studio/PublicChat';
 import StudioHome from './pages/studio/StudioHome';
+import Upgrade from './pages/Upgrade';
 import { hasStoredToken } from './hooks/useAuth';
 
 function LoginRedirect() {
@@ -50,6 +51,7 @@ export default function App() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/agents" element={<Agents />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/upgrade" element={<Upgrade />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

@@ -7,6 +7,12 @@ import clsx from 'clsx';
 import { hasStoredToken, useLogin, useRegister, useRegistrationMode } from '../hooks/useAuth';
 import { useI18n } from '../i18n';
 
+/** Only same-origin paths, so ?next= can't send someone to another site. */
+function safeNext(value: string | null): string {
+  if (!value || !value.startsWith('/') || value.startsWith('//') || value.startsWith('/\\')) return '/studio';
+  return value;
+}
+
 const inputClass =
   'h-10 w-full rounded-lg border border-surface-3 bg-surface-2 px-3 text-sm text-slate-200 placeholder:text-slate-600 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500';
 
@@ -18,8 +24,7 @@ export default function Login() {
   const inviteFromLink = params.get('invite') ?? '';
   // Where to go after signing in: the page that sent us here, else the
   // builder app (most people come to make an assistant).
-  const nextParam = params.get('next') ?? '';
-  const next = nextParam.startsWith('/') && !nextParam.startsWith('//') ? nextParam : '/studio';
+  const next = safeNext(params.get('next'));
 
   const login = useLogin();
   const register = useRegister();
@@ -62,6 +67,12 @@ export default function Login() {
           <span className="text-xl font-semibold tracking-tight text-white">AgntSpark</span>
           <p className="max-w-xs text-sm text-slate-400">{t('login.tagline')}</p>
         </div>
+
+        {next === '/upgrade' && (
+          <p className="mb-4 text-center text-sm text-slate-400">
+            Sign in or create your account to continue to Pro checkout.
+          </p>
+        )}
 
         <div className="rounded-2xl border border-white/5 bg-surface-1/90 p-6 shadow-2xl shadow-black/40 backdrop-blur">
           {canRegister && (
