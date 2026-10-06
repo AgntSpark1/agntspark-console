@@ -36,8 +36,10 @@ apiClient.interceptors.response.use(
       // Session expired / token revoked — drop it and send the user back to
       // login rather than rendering a page full of failed queries.
       localStorage.removeItem(TOKEN_STORAGE_KEY);
-      if (window.location.pathname !== '/login') {
-        window.location.assign('/login');
+      const { pathname, search } = window.location;
+      if (pathname !== '/login') {
+        const next = pathname + search;
+        window.location.assign(next === '/' ? '/login' : `/login?next=${encodeURIComponent(next)}`);
       }
     }
 

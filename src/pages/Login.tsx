@@ -5,6 +5,12 @@ import BrandMark from '../components/BrandMark';
 import clsx from 'clsx';
 import { hasStoredToken, useLogin, useRegister, useRegistrationMode } from '../hooks/useAuth';
 
+/** Only same-origin paths, so ?next= can't send someone to another site. */
+function safeNext(value: string | null): string {
+  if (!value || !value.startsWith('/') || value.startsWith('//') || value.startsWith('/\\')) return '/';
+  return value;
+}
+
 export const inputClass =
   'h-10 w-full rounded-lg border border-surface-3 bg-surface-2 px-3 text-sm text-slate-200 placeholder:text-slate-600 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500';
 
@@ -13,6 +19,7 @@ export default function Login() {
   const [params] = useSearchParams();
   // Invite links look like /login?invite=inv_…
   const inviteFromLink = params.get('invite') ?? '';
+  const next = safeNext(params.get('next'));
 
   const login = useLogin();
   const register = useRegister();
@@ -25,7 +32,7 @@ export default function Login() {
   const [name, setName] = useState('');
   const [inviteCode, setInviteCode] = useState(inviteFromLink);
 
-  if (hasStoredToken()) return <Navigate to="/" replace />;
+  if (hasStoredToken()) return <Navigate to={next} replace />;
 
   const canRegister = registration !== 'closed';
   const activeMode = canRegister ? mode : 'login';
@@ -33,7 +40,7 @@ export default function Login() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const onSuccess = () => navigate('/', { replace: true });
+    const onSuccess = () => navigate(next, { replace: true });
     if (activeMode === 'login') {
       login.mutate({ email, password }, { onSuccess });
     } else {
@@ -51,6 +58,12 @@ export default function Login() {
           <BrandMark className="h-9 w-9 shrink-0 text-slate-100" />
           <span className="text-lg font-semibold text-white">AgntSpark Console</span>
         </div>
+
+        {next === '/upgrade' && (
+          <p className="mb-4 text-center text-sm text-slate-400">
+            Sign in or create your account to continue to Pro checkout.
+          </p>
+        )}
 
         <div className="rounded-2xl border border-surface-3 bg-surface-1 p-6">
           {canRegister && (
