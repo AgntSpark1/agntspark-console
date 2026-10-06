@@ -1,11 +1,12 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Bot, LayoutDashboard, LogOut, Settings } from 'lucide-react';
+import { Bot, LayoutDashboard, LogOut, MessageSquare, Settings } from 'lucide-react';
 import BrandMark from './BrandMark';
 import clsx from 'clsx';
 import { useLogout, useMe } from '../hooks/useAuth';
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
+  { to: '/studio', label: 'Assistants', icon: MessageSquare },
   { to: '/agents', label: 'Agents', icon: Bot },
   { to: '/settings', label: 'Settings', icon: Settings },
 ];
