@@ -24,6 +24,7 @@ export const zhCN: Messages = {
   'login.password': '密码',
   'login.passwordHint': '至少 8 个字符。',
   'login.closed': '目前暂停新用户注册。',
+  'login.upgradeNote': '登录或注册账号后，继续购买专业版。',
 
   'home.title': '我的助手',
   'home.subtitle': '让助手了解你的生意，然后分享到任何地方。',

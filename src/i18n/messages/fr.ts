@@ -24,6 +24,7 @@ export const fr: Messages = {
   'login.password': 'Mot de passe',
   'login.passwordHint': '8 caractères minimum.',
   'login.closed': 'Les inscriptions sont fermées pour le moment.',
+  'login.upgradeNote': 'Connectez-vous ou créez votre compte pour passer au paiement Pro.',
 
   'home.title': 'Vos assistants',
   'home.subtitle': 'Présentez votre activité à un assistant, puis partagez-le partout.',

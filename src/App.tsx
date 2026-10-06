@@ -12,10 +12,12 @@ import StudioHome from './pages/studio/StudioHome';
 import Upgrade from './pages/Upgrade';
 import { hasStoredToken } from './hooks/useAuth';
 
+// Come back here after signing in (e.g. /upgrade from the website's pricing section).
 function LoginRedirect() {
   const location = useLocation();
-  const next = encodeURIComponent(location.pathname + location.search);
-  return <Navigate to={`/login?next=${next}`} replace />;
+  const next = location.pathname + location.search;
+  const to = next === '/' ? '/login' : `/login?next=${encodeURIComponent(next)}`;
+  return <Navigate to={to} replace />;
 }
 
 function RequireAuth() {

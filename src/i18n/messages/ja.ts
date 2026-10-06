@@ -24,6 +24,7 @@ export const ja: Messages = {
   'login.password': 'パスワード',
   'login.passwordHint': '8文字以上で入力してください。',
   'login.closed': '現在、新規アカウントの受付を停止しています。',
+  'login.upgradeNote': 'ログインまたはアカウントを作成すると、Pro のお支払いに進めます。',
 
   'home.title': 'あなたのアシスタント',
   'home.subtitle': 'お店のことを教えて、どこでも共有できます。',

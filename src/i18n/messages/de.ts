@@ -24,6 +24,7 @@ export const de: Messages = {
   'login.password': 'Passwort',
   'login.passwordHint': 'Mindestens 8 Zeichen.',
   'login.closed': 'Neue Konten sind derzeit nicht möglich.',
+  'login.upgradeNote': 'Melde dich an oder erstelle ein Konto, um zur Pro-Zahlung weiterzugehen.',
 
   'home.title': 'Deine Assistenten',
   'home.subtitle': 'Bring einem Assistenten dein Geschäft bei und teile ihn überall.',

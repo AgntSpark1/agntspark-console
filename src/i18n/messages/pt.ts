@@ -24,6 +24,7 @@ export const pt: Messages = {
   'login.password': 'Senha',
   'login.passwordHint': 'Pelo menos 8 caracteres.',
   'login.closed': 'No momento, não estamos aceitando novas contas.',
+  'login.upgradeNote': 'Entre ou crie sua conta para continuar para o pagamento do Pro.',
 
   'home.title': 'Seus assistentes',
   'home.subtitle': 'Ensine um assistente sobre o seu negócio e compartilhe onde quiser.',

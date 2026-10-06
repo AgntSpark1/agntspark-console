@@ -25,6 +25,7 @@ export const en = {
   'login.password': 'Password',
   'login.passwordHint': 'At least 8 characters.',
   'login.closed': 'New accounts are currently closed.',
+  'login.upgradeNote': 'Sign in or create your account to continue to Pro checkout.',
 
   'home.title': 'Your assistants',
   'home.subtitle': 'Teach an assistant about your business, then share it anywhere.',

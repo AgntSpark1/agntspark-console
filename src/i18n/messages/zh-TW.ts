@@ -24,6 +24,7 @@ export const zhTW: Messages = {
   'login.password': '密碼',
   'login.passwordHint': '至少 8 個字元。',
   'login.closed': '目前暫停開放建立新帳號。',
+  'login.upgradeNote': '登入或建立帳號後，繼續購買 Pro 方案。',
 
   'home.title': '我的助理',
   'home.subtitle': '讓助理認識你的生意，再分享到任何地方。',

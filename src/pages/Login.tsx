@@ -7,7 +7,10 @@ import clsx from 'clsx';
 import { hasStoredToken, useLogin, useRegister, useRegistrationMode } from '../hooks/useAuth';
 import { useI18n } from '../i18n';
 
-/** Only same-origin paths, so ?next= can't send someone to another site. */
+/**
+ * Only same-origin paths, so ?next= can't send someone to another site.
+ * Without one, go to the builder app: most people come to make an assistant.
+ */
 function safeNext(value: string | null): string {
   if (!value || !value.startsWith('/') || value.startsWith('//') || value.startsWith('/\\')) return '/studio';
   return value;
@@ -22,8 +25,6 @@ export default function Login() {
   const [params] = useSearchParams();
   // Invite links look like /login?invite=inv_…
   const inviteFromLink = params.get('invite') ?? '';
-  // Where to go after signing in: the page that sent us here, else the
-  // builder app (most people come to make an assistant).
   const next = safeNext(params.get('next'));
 
   const login = useLogin();
@@ -70,7 +71,7 @@ export default function Login() {
 
         {next === '/upgrade' && (
           <p className="mb-4 text-center text-sm text-slate-400">
-            Sign in or create your account to continue to Pro checkout.
+            {t('login.upgradeNote')}
           </p>
         )}
 

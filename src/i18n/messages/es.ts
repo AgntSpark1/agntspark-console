@@ -24,6 +24,7 @@ export const es: Messages = {
   'login.password': 'Contraseña',
   'login.passwordHint': 'Mínimo 8 caracteres.',
   'login.closed': 'Por ahora no estamos aceptando cuentas nuevas.',
+  'login.upgradeNote': 'Inicia sesión o crea tu cuenta para continuar con el pago de Pro.',
 
   'home.title': 'Tus asistentes',
   'home.subtitle': 'Enséñale a un asistente sobre tu negocio y compártelo donde quieras.',

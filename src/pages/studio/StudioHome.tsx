@@ -78,7 +78,7 @@ export default function StudioHome() {
             <span className="flex items-center gap-3">
               <span>{t('home.assistantsUsed', { used: usage.assistants, limit: usage.assistants_limit })}</span>
               {usage.plan === 'free' && (
-                <Link to="/settings" className="font-medium text-brand-300 hover:underline">
+                <Link to="/upgrade" className="font-medium text-brand-300 hover:underline">
                   {t('home.upgrade')}
                 </Link>
               )}

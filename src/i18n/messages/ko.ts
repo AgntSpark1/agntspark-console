@@ -24,6 +24,7 @@ export const ko: Messages = {
   'login.password': '비밀번호',
   'login.passwordHint': '8자 이상 입력해 주세요.',
   'login.closed': '지금은 새 계정을 받지 않고 있어요.',
+  'login.upgradeNote': '로그인하거나 계정을 만들면 Pro 결제로 이어져요.',
 
   'home.title': '내 어시스턴트',
   'home.subtitle': '어시스턴트에게 우리 가게를 알려 주고, 어디서든 공유해 보세요.',
