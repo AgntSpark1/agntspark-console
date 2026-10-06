@@ -3,6 +3,7 @@ import Layout from './components/Layout';
 import Agents from './pages/Agents';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
+import ResetPassword from './pages/ResetPassword';
 import Settings from './pages/Settings';
 import Upgrade from './pages/Upgrade';
 import { hasStoredToken } from './hooks/useAuth';
@@ -26,6 +27,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route element={<RequireAuth />}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/agents" element={<Agents />} />
